@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/fe.css') }}">
+    <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <title>X-Ray Covid</title>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <header class="text-white text-center">
+            <h1 class="display-4">Upload Image</h1>
+            <img src="https://res.cloudinary.com/mhmd/image/upload/v1564991372/image_pxlho1.svg" alt="" width="150" class="mb-4">
+        </header>
+    
+        <form id="upload-form" action="{{url_for('upload')}}" method="post" enctype="multipart/form-data">
+            <div class="row py-4 text-center">
+                <div class="col-lg-6 mx-auto">
+
+                    <div class="input-group mb-3 px-2 py-2 rounded-pill bg-white shadow-sm">
+                        <input id="upload" type="file" name="image" accept="image/*" class="form-control border-0" required>
+                        <label id="upload-label" for="upload" class="font-weight-light text-muted">Choose file</label>
+                        <div class="input-group-append">
+                            <label for="upload" class="btn btn-light m-0 rounded-pill px-4"> <i class="fa fa-cloud-upload mr-2 text-muted"></i><small class="text-uppercase font-weight-bold text-muted">Choose file</small></label>
+                        </div>
+                    </div>
+
+                        <button class="btn btn-light m-0 rounded-pill px-4" style="width: 130px; display: none" id="btnLoad"><i class="fa fa-spinner fa-spin"></i>Loading</button>
+                        <button type="submit" value="send" class="btn btn-light m-0 rounded-pill px-4" onclick="myFunction()" style="width: 130px" id="btnEnviar">Enviar</button>
+
+                </div>
+            </div>
+        </form>
+
+    </div>
+    <div class = "row d-flex justify-content-center align-items-center text-center" style="height:150px">
+        <div class="col-md-4 align-self-center">
+            <figure>
+                <img src="static/styles/normal.jpeg" height="150px" style="border: 5px solid #ffffff">
+                <figcaption>Normal X-Ray</figcaption>
+            </figure>
+        </div>
+        <div class="col-md-4 align-self-center">
+            <figure>
+                <img src="static/styles/covid.jpeg" height="150px"style="border: 5px solid #ffffff">
+                <figcaption>Covid-19 X-Ray</figcaption>
+            </figure>
+        </div>
+        <div class="col-md-4 align-self-center">
+            <figure>
+                <img src="static/styles/outra.jpeg" height="150px" style="border: 5px solid #ffffff">
+                <figcaption>Another virus X-Ray</figcaption>
+            </figure>
+        </div>
+    </div>
+    
+
+     <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+    <script>
+        function myFunction(){
+            if(document.getElementById("upload").value == ""){
+            }
+            else{
+                document.getElementById("btnEnviar").style.display = 'none';
+                document.getElementById("btnLoad").style.display = '';
+            }
+        }
+
+        /*  ==========================================
+            SHOW UPLOADED IMAGE
+        * ========================================== */
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#imageResult')
+                        .attr('src', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $(function () {
+            $('#upload').on('change', function () {
+                readURL(input);
+            });
+        });
+
+        /*  ==========================================
+            SHOW UPLOADED IMAGE NAME
+        * ========================================== */
+        var input = document.getElementById( 'upload' );
+        var infoArea = document.getElementById( 'upload-label' );
+
+        input.addEventListener( 'change', showFileName );
+        function showFileName( event ) {
+          var input = event.srcElement;
+          var fileName = input.files[0].name;
+          infoArea.textContent = 'File name: ' + fileName;
+        }
+
+    </script>
+</body>
+</html>

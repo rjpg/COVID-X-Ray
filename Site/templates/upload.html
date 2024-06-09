@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="pt">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css"
+          rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/fe.css') }}">
+    <style>
+        .modal-content{
+            background-color: #757f9a;
+            background-image: linear-gradient(147deg, #757f9a 0%, #d7dde8 100%);
+        }
+    </style>
+    <title>X-Ray Covid</title>
+</head>
+<body>
+<div class="row" id="title-bar">
+    <div class="col-md-12 text-center text-white">
+        <h1 class="display-4">X-Ray Covid</h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 text-right" style="padding-top: 50px">
+        <input type="checkbox" name="checkbox" id="checkbox" checked="checked" data-toggle="toggle" data-on="Original"
+               data-off="Analysis" data-onstyle="success" data-offstyle="danger">
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-5 img-zoom-container" id="container_img_enviada">
+        <img id="enviado" src="{{ url_for('static', filename = send) }}"/>
+    </div>
+    <div class="col-md-5 img-zoom-container" id="container_img_recebida">
+        <img class="product__image" id="recebido" src="{{ url_for('static', filename = received) }}" alt="Imagem Recebida"/>
+    </div>
+    <div class="col-md-5 text-center info allign-middle" style="border-style: double;">
+            <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+
+</div>
+
+<div class="row" style="padding-top:50px">
+    <div class="col-md-12 text-center">
+        <a title="Don't agree with our analysis?">
+           <button class="btn" data-toggle="modal" data-target="#disagree"><i class="fa fa-question-circle fa-3x"></i></button>
+        </a>
+    </div>
+</div>
+
+<!-- Form of disagree Modal -->
+<div class="modal fade" id="disagree" tabindex="-1" role="dialog" aria-labelledby="disagreeModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="disagreeModalLabel">Do you disagree with our analysis please tell us</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+           <p>What was your conclusion about this patient?</p>
+            <input type="radio" id="normal" name="classification" value="normal" required>
+            <label for="normal">Normal</label><br>
+            <input type="radio" id="covid" name="classification" value="covid">
+            <label for="covid">Covid</label><br>
+            <input type="radio" id="other" name="classification" value="other">
+            <label for="other">Other Virus</label><br>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="SaveModal" onclick="sendDisagree()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="success" tabindex="-1" role="dialog" aria-labelledby="SuccessModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SuccessModalLabel">Thank you for your contribution</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <span>Your suggestion was registered and will help us improve our AI</span>
+          <img src="static/styles/send.png" style="display:block; margin:auto;">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="error" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="erroModalLabel">Something went wrong</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <span>Something went wrong please contact an administrator</span>
+          <img src="static/styles/stop.png" style="display:block; margin:auto">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/js/bootstrap4-toggle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"></script>
+<script>
+        $('#checkbox').change(function() {
+            if($(this).prop('checked') == true){
+                document.getElementById("container_img_recebida").style.display = "none";
+                document.getElementById("container_img_enviada").style.display = "";
+                $('#recebido').removeData('elevateZoom');
+                $('#enviado').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair",
+                zoomWindowFadeIn: 500,
+                zoomWindowFadeOut: 750
+            }); 
+            }
+            else{
+                document.getElementById("container_img_recebida").style.display = "";
+                document.getElementById("container_img_enviada").style.display = "none";
+                $('#enviado').removeData('elevateZoom');
+                $('#recebido').elevateZoom({
+                zoomType: "inner",
+                cursor: "crosshair",
+                zoomWindowFadeIn: 500,
+                zoomWindowFadeOut: 750
+                });
+                
+            }
+        })
+
+</script>
+<script src="{{ url_for('static',filename='styles/jquery.elevatezoom.js') }}"></script>
+<script>
+        $('#enviado').elevateZoom({
+            zoomType: "inner",
+            cursor: "crosshair",
+            zoomWindowFadeIn: 500,
+            zoomWindowFadeOut: 750
+        });
+        document.getElementById("container_img_recebida").style.display = "none";
+
+</script>
+<script src="{{ url_for('static',filename='styles/upload.js') }}"></script>
+
+<script>
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels : [{% for item in labels %}
+                 "{{item}}",
+                {% endfor %}],
+            datasets: [{
+                label: 'Dados da simulação',
+                data : [{% for item in values %}
+                    {{item}},
+                  {% endfor %}],
+                backgroundColor: [
+                    'rgb(0, 255, 0)',
+                    'rgb(255, 0, 0)',
+                    'rgb(0, 0, 255)'
+                ]
+            }]
+        },
+        options: {
+            title : {
+                display: true,
+                text: 'Analysis Results',
+                fontSize : 16,
+                fontColor : '#ffffff',
+                padding : 40
+            },
+            legend: {
+                display: false
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            },
+            tooltips : {
+                enabled: true,
+                mode: 'single',
+                callbacks: {
+                  label: function(tooltipItems, data) {
+                    return data.datasets[0].data[tooltipItems.index] + '%';
+                  }
+                }
+            }
+        }
+    });
+</script>
+<script>
+    function sendDisagree(){
+        if(document.getElementById("normal").checked){
+            classification = document.getElementById("normal").value;
+        }
+        if(document.getElementById("covid").checked){
+            classification = document.getElementById("covid").value;
+        }
+        if(document.getElementById("other").checked){
+            classification = document.getElementById("other").value;
+        }
+        imagePath = document.getElementById("enviado").src
+        values = [{% for item in values %}
+                    {{item}},
+                  {% endfor %}]
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        var theUrl = "/disagree";
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var myObj = JSON.parse(this.responseText);
+            if (myObj.data == "Success"){
+                $('#disagree').modal('hide');
+                $('#success').modal('show');
+            }
+            else{
+                $('#disagree').modal('hide');
+                $('#error').modal('show');
+            }
+          }
+          if (this.readyState == 4 && this.status != 200){
+                $('#disagree').modal('hide');
+                $('#error').modal('show');
+          }
+        };
+        xmlhttp.open("POST", theUrl);
+        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xmlhttp.send(JSON.stringify({ "classification": classification, "path": imagePath, "value": values}));
+    }
+</script>
+</body>
+</html>

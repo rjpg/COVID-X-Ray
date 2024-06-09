@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>X-Ray Covid</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/fe.css') }}">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.6.1/css/bootstrap4-toggle.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css'><link rel="stylesheet" href="{{ url_for('static',filename='styles/style.css') }}">
+  <style>
+    .carousel-item img {
+      width:100%
+    }
+  </style>
+</head>
+<body>
+<div class="carousel slide" id="demo-carousel" data-ride="carousel">
+  <ol class="carousel-indicators">
+    <li class="active" data-target="#demo-carousel" data-slide-to="1"></li>
+    <li data-target="#demo-carousel" data-slide-to="2"></li>
+    <li data-target="#demo-carousel" data-slide-to="3"></li>
+  </ol>
+  <div class="carousel-inner" role="listbox">
+    <div class="carousel-item active">
+      <div class="carousel-caption" style="top:10%">
+        <h3>Models & Data</h3>
+        <p>At FEUP in collaboration with S. Joo hospital, we are developing an app for chest x-ray
+        images diagnose. This app outputs the probability of COVID 19 infection and marks the
+        pulmonary affected areas. We based this research on the Deep Learning framework. For these
+        two tasks, we use a classification model and an autoencoder. We use the 2020 COVID-19
+        Image Data Collection [1] and from Mendeley Data Chest XRay Images for Classification [2].
+        The following table 1 describes the number of chest X-ray images we were able to collect.
+        </p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <div class="carousel-caption" style="top:10%">
+        <h3>Introduction</h3>
+        <p>We present a support system for clinical diagnosis, using the Deep Learning (DL) framework to create computational models, based on convolutional neural networks architectures
+        (ResNet , Xception , etc.), for classification of chest radiographic images. Optimize the severity assessment process determined by chest X-ray. In this context, it is possible to highlight
+        the affected zones, through the deep autoencoders and/or the using grap-CAM algorithm
+        on the classifier, which are the standard for anomaly detection. We use an online open data
+        set of X-ray images. The developed APP for the user interface is also described.
+        </p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <div class="carousel-caption" style="top:10%">
+        <h3>Anomaly annotation</h3>
+        <p>For the process of marking the affected areas in the image i.e. Anomaly detection/annotation,
+        we developed and test two different approaches. The first methodology involved the creation
+        of another DL based model for anomaly detection and marking. This model is based on a
+        convolutional auto-encoder architecture
+        </p>
+      </div>
+    </div>
+  </div>
+  <a class="left carousel-control" href="#demo-carousel" role="button" data-slide="prev"><span class="icon-prev" aria-hidden="true"></span><span class="sr-only">Previous</span></a><a class="right carousel-control" href="#demo-carousel" role="button" data-slide="next"><span class="icon-next" aria-hidden="true"></span><span class="sr-only">Next</span></a>
+</div>
+<div class="container marketing">
+  <hr class="featurette-divider">
+
+  <div class="row" style="padding-top: 20px">
+    <div class="col-md-1">
+    </div>
+    <div class="col-md-2">
+      <img class="rounded-circle" src="{{ url_for('static',filename='styles/FranciscoAlmeida.jpeg') }}" title="Dr Francisco Almeida (CHUSJ)" width="140" height="140">
+    </div>
+    <div class="col-md-2">
+      <img class="rounded-circle" src="{{ url_for('static',filename='styles/MargaridaTavares.jpg') }}" title="Dra Margarida Tavares (CHUSJ)" width="140" height="140">
+    </div>
+    <div class="col-md-2">
+      <img class="rounded-circle" src="{{ url_for('static',filename='styles/FernandoPereira.png') }}" title="Fernando Lobo Pereira (FEUP)" width="140" height="140">
+    </div>
+    <div class="col-md-2">
+      <img class="rounded-circle" src="{{ url_for('static',filename='styles/RuiGoncalves.jpg') }}" title="Rui Gonçalves (FEUP)" width="140" height="140">
+    </div>
+    <div class="col-md-2">
+      <img class="rounded-circle" src="{{ url_for('static',filename='styles/JoaoFonseca.jpg') }}" title="João Fonseca (ISPGAYA)" width="140" height="140">
+    </div>
+    <div class="col-md-1">
+    </div>
+  </div>
+
+    <!-- START THE FEATURETTES -->
+
+    <hr class="featurette-divider">
+
+    <!-- Xray Example-->
+    <div class="row featurette">
+      <div class="col-md-7">
+        <h2 class="featurette-heading">Click the image to use our Application</h2>
+        <p class="lead">These results are subject to validation by health professionals. We try some variations
+        applying the grad-CAM to other convolution layers of the model instead of the last, since
+        the last convolution layer of our model works with low resolution input maps, resulting in a
+        low resolution heatmap. In the figure on the right is the result of applying grad-CAM algorithm to the
+        second before last convolution layer of our original classification model, based on Xception
+        architecture.</p>
+      </div>
+      <div class="col-md-5">
+        <a href="app">
+          <div id="demo" class="carousel slide" data-ride="carousel" style="width:400px; height:400px" data-interval="3000">
+            <!-- The slideshow -->
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img src="{{ url_for('static',filename='styles/ImagemExemplo.jpg') }}" alt="Los Angeles">
+              </div>
+              <div class="carousel-item">
+                <img src="{{ url_for('static',filename='styles/original.jpg') }}" alt="original">
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <hr class="featurette-divider">
+    <!-- Git-->
+    <div class="row featurette d-flex justify-content-center">
+      <div class="col-md-12 text-center">
+        <h2 class="featurette-heading ">Check our project on github</h2>
+      </div>
+      <div class="row featurette">
+        <div class="col-md-12">
+          <a href="https://www.github.com/Fonseca2570/Covid" target="_blank"><img src="{{ url_for('static',filename='styles/github.png') }}" data-holder-rendered="true" style="width: 500px; height: 500px;" ></a>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="featurette-divider">
+    <div class="row featurette">
+      <div class="col-md-12 text-center">
+        <a href="{{ url_for('static',filename='styles/covid-19-FEUP-CHUSJ.pdf') }}" target="_blank">Documentation</a>
+      </div>
+    </div>
+    <hr class="featurette-divider">
+    <!--
+    <div class="row featurette">
+      <div class="col-md-7">
+        <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
+        <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+      </div>
+      <div class="col-md-5">
+        <img class="featurette-image img-fluid mx-auto" data-src="holder.js/500x500/auto" alt="500x500" src="data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22500%22%20height%3D%22500%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20500%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_173fcbd9b55%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A25pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_173fcbd9b55%22%3E%3Crect%20width%3D%22500%22%20height%3D%22500%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22185.1171875%22%20y%3D%22261.1%22%3E500x500%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E" data-holder-rendered="true" style="width: 500px; height: 500px;">
+      </div>
+    </div>
+
+    <hr class="featurette-divider">
+    -->
+    <!-- /END THE FEATURETTES -->
+
+</div>
+<!-- partial -->
+  <script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/js/bootstrap.min.js'></script><script  src="{{ url_for('static',filename='styles/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<html><head>
+<title>app.py</title>
+<meta name="Generator" content="htmlizer/[Twisted, version 18.9.0]" />
+<link rel="alternate" href="app.py" type="text/x-python" />
+
+</head>
+<body>
+<pre><span class="py-src-variable">import</span> <span class="py-src-variable">sys</span>
+<span class="py-src-variable">sys</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">append</span>(<span class="py-src-string">&quot;/home/covid/Covid/BE/venv/Lib/site-packages/&quot;</span>)
+<span class="py-src-variable">from</span> <span class="py-src-variable">flask</span> <span class="py-src-variable">import</span> <span class="py-src-variable">Flask</span>, <span class="py-src-variable">request</span>, <span class="py-src-variable">render_template</span>, <span class="py-src-variable">jsonify</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">time</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">PIL</span> <span class="py-src-variable">import</span> <span class="py-src-variable">Image</span> <span class="py-src-variable">as</span> <span class="py-src-variable">pillow</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">cv2</span> <span class="py-src-variable">import</span> <span class="py-src-variable">imread</span>, <span class="py-src-variable">resize</span>, <span class="py-src-variable">cvtColor</span>, <span class="py-src-variable">COLOR_BGR2RGB</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">tensorflow</span>.<span class="py-src-variable">keras</span>.<span class="py-src-variable">models</span> <span class="py-src-variable">import</span> <span class="py-src-variable">load_model</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">os</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">numpy</span> <span class="py-src-variable">as</span> <span class="py-src-variable">np</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">tensorflow</span> <span class="py-src-variable">as</span> <span class="py-src-variable">tf</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">tensorflow</span> <span class="py-src-variable">import</span> <span class="py-src-variable">keras</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">IPython</span>.<span class="py-src-variable">display</span> <span class="py-src-variable">import</span> <span class="py-src-variable">Image</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">matplotlib</span>.<span class="py-src-variable">pyplot</span> <span class="py-src-variable">as</span> <span class="py-src-variable">plt</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">matplotlib</span>.<span class="py-src-variable">cm</span> <span class="py-src-variable">as</span> <span class="py-src-variable">cm</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">csv</span>
+<span class="py-src-variable">from</span> <span class="py-src-variable">shutil</span> <span class="py-src-variable">import</span> <span class="py-src-variable">copyfile</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">json</span>
+<span class="py-src-variable">import</span> <span class="py-src-variable">socket</span>
+
+<span class="py-src-variable">app</span> = <span class="py-src-variable">Flask</span>(<span class="py-src-variable">__name__</span>)
+
+<span class="py-src-variable">APP_ROOT</span> = <span class="py-src-variable">os</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">dirname</span>(<span class="py-src-variable">os</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">abspath</span>(<span class="py-src-variable">__file__</span>))
+
+<span class="py-src-variable">model</span> = <span class="py-src-variable">load_model</span>(<span class="py-src-string">&#x27;mdl_wts.hdf5&#x27;</span>)
+<span class="py-src-variable">last_conv_layer_name</span> = <span class="py-src-string">&quot;separable_conv2d_20&quot;</span>
+<span class="py-src-comment"># last_conv_layer_name = &quot;dropout_9&quot;</span>
+
+<span class="py-src-variable">classifier_layer_names</span> = [
+    <span class="py-src-comment">#   &quot;separable_conv2d_19&quot;,</span>
+    <span class="py-src-comment">#   &quot;batch_normalization_9&quot;,</span>
+    <span class="py-src-comment">#   &quot;max_pooling2d_15&quot;,</span>
+    <span class="py-src-comment">#   &quot;dropout_9&quot;,</span>
+    <span class="py-src-comment">#   &quot;separable_conv2d_20&quot;,</span>
+    <span class="py-src-string">&quot;separable_conv2d_21&quot;</span>,
+    <span class="py-src-string">&quot;batch_normalization_10&quot;</span>,
+    <span class="py-src-string">&quot;max_pooling2d_16&quot;</span>,
+    <span class="py-src-string">&quot;dropout_10&quot;</span>,
+    <span class="py-src-string">&quot;separable_conv2d_22&quot;</span>,
+    <span class="py-src-string">&quot;separable_conv2d_23&quot;</span>,
+    <span class="py-src-string">&quot;batch_normalization_11&quot;</span>,
+    <span class="py-src-string">&quot;max_pooling2d_17&quot;</span>,
+    <span class="py-src-string">&quot;dropout_11&quot;</span>,
+    <span class="py-src-string">&quot;flatten_1&quot;</span>,
+    <span class="py-src-string">&quot;dense_5&quot;</span>,
+    <span class="py-src-string">&quot;dropout_12&quot;</span>,
+    <span class="py-src-string">&quot;dense_6&quot;</span>,
+    <span class="py-src-string">&quot;dropout_13&quot;</span>,
+    <span class="py-src-string">&quot;dense_7&quot;</span>,
+    <span class="py-src-string">&quot;dropout_14&quot;</span>,
+    <span class="py-src-string">&quot;dense_8&quot;</span>,
+    <span class="py-src-string">&quot;dropout_15&quot;</span>,
+    <span class="py-src-string">&quot;dense_9&quot;</span>,
+]
+
+<span class="py-src-variable">def</span> <span class="py-src-identifier">get_Host_name_IP</span>():
+	<span class="py-src-variable">while</span> <span class="py-src-variable">True</span>:
+		<span class="py-src-variable">try</span>:
+			<span class="py-src-variable">s</span> = <span class="py-src-variable">socket</span>.<span class="py-src-variable">socket</span>(<span class="py-src-variable">socket</span>.<span class="py-src-variable">AF_INET</span>, <span class="py-src-variable">socket</span>.<span class="py-src-variable">SOCK_DGRAM</span>)
+   <span class="py-src-variable">s</span>.<span class="py-src-variable">connect</span>((<span class="py-src-string">&quot;8.8.8.8&quot;</span>,<span class="py-src-number">80</span>))
+   <span class="py-src-variable">host_ip</span> = <span class="py-src-variable">s</span>.<span class="py-src-variable">getsockname</span>()[<span class="py-src-number">0</span>]
+   <span class="py-src-variable">s</span>.<span class="py-src-variable">close</span>()
+   <span class="py-src-variable">return</span> <span class="py-src-variable">host_ip</span>
+  <span class="py-src-variable">except</span>:
+			<span class="py-src-variable">print</span>(<span class="py-src-string">&quot;unable to get IP&quot;</span>)
+
+
+<span class="py-src-variable">def</span> <span class="py-src-identifier">dataPrediction</span>(<span class="py-src-parameter">path</span>):
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">imread</span>(<span class="py-src-variable">path</span>)
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">cvtColor</span>(<span class="py-src-variable">image</span>, <span class="py-src-variable">COLOR_BGR2RGB</span>)
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">resize</span>(<span class="py-src-variable">image</span>, (<span class="py-src-number">224</span>, <span class="py-src-number">224</span>))
+
+    <span class="py-src-comment"># add to array (input format for keras model must be array - one position in our case)</span>
+    <span class="py-src-variable">inputData</span>=[]
+    <span class="py-src-variable">inputData</span>.<span class="py-src-variable">append</span>(<span class="py-src-variable">image</span>)
+
+    <span class="py-src-variable">data</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">array</span>(<span class="py-src-variable">inputData</span>) / <span class="py-src-number">255.0</span> <span class="py-src-comment">#normalization</span>
+
+    <span class="py-src-variable">pred_Y</span> = <span class="py-src-variable">model</span>.<span class="py-src-variable">predict</span>(<span class="py-src-variable">data</span>, <span class="py-src-variable">verbose</span> = <span class="py-src-variable">True</span>)
+
+
+    <span class="py-src-variable">return</span> <span class="py-src-variable">pred_Y</span>
+
+<span class="py-src-variable">def</span> <span class="py-src-identifier">get_img_array</span>(<span class="py-src-parameter">img_path</span>, <span class="py-src-parameter">size</span>):
+    <span class="py-src-comment"># `img` is a PIL image of size 299x299</span>
+    <span class="py-src-variable">img</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">load_img</span>(<span class="py-src-variable">img_path</span>, <span class="py-src-variable">target_size</span>=<span class="py-src-variable">size</span>)
+    <span class="py-src-comment"># `array` is a float32 Numpy array of shape (299, 299, 3)</span>
+    <span class="py-src-variable">array</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">img_to_array</span>(<span class="py-src-variable">img</span>)
+    <span class="py-src-comment"># We add a dimension to transform our array into a &quot;batch&quot;</span>
+    <span class="py-src-comment"># of size (1, 299, 299, 3)</span>
+    <span class="py-src-variable">array</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">expand_dims</span>(<span class="py-src-variable">array</span>, <span class="py-src-variable">axis</span>=<span class="py-src-number">0</span>)
+    <span class="py-src-variable">return</span> <span class="py-src-variable">array</span>
+
+
+<span class="py-src-variable">def</span> <span class="py-src-identifier">make_gradcam_heatmap</span>(<span class="py-src-parameter">img_array</span>, <span class="py-src-parameter">model</span>, <span class="py-src-parameter">last_conv_layer_name</span>, <span class="py-src-parameter">classifier_layer_names</span>):
+    <span class="py-src-comment"># First, we create a model that maps the input image to the activations</span>
+    <span class="py-src-comment"># of the last conv layer</span>
+    <span class="py-src-variable">last_conv_layer</span> = <span class="py-src-variable">model</span>.<span class="py-src-variable">get_layer</span>(<span class="py-src-variable">last_conv_layer_name</span>)
+    <span class="py-src-variable">last_conv_layer_model</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">Model</span>(<span class="py-src-variable">model</span>.<span class="py-src-variable">inputs</span>, <span class="py-src-variable">last_conv_layer</span>.<span class="py-src-variable">output</span>)
+
+    <span class="py-src-comment"># Second, we create a model that maps the activations of the last conv</span>
+    <span class="py-src-comment"># layer to the final class predictions</span>
+    <span class="py-src-variable">classifier_input</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">Input</span>(<span class="py-src-variable">shape</span>=<span class="py-src-variable">last_conv_layer</span>.<span class="py-src-variable">output</span>.<span class="py-src-variable">shape</span>[<span class="py-src-number">1</span>:])
+    <span class="py-src-variable">x</span> = <span class="py-src-variable">classifier_input</span>
+
+    <span class="py-src-comment"># x = model.get_layer(classifier_layer_names)(x)</span>
+    <span class="py-src-variable">for</span> <span class="py-src-variable">layer_name</span> <span class="py-src-variable">in</span> <span class="py-src-variable">classifier_layer_names</span>:
+        <span class="py-src-variable">x</span> = <span class="py-src-variable">model</span>.<span class="py-src-variable">get_layer</span>(<span class="py-src-variable">layer_name</span>)(<span class="py-src-variable">x</span>)
+
+    <span class="py-src-variable">classifier_model</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">Model</span>(<span class="py-src-variable">classifier_input</span>, <span class="py-src-variable">x</span>)
+
+    <span class="py-src-comment"># Then, we compute the gradient of the top predicted class for our input image</span>
+    <span class="py-src-comment"># with respect to the activations of the last conv layer</span>
+    <span class="py-src-variable">with</span> <span class="py-src-variable">tf</span>.<span class="py-src-variable">GradientTape</span>() <span class="py-src-variable">as</span> <span class="py-src-variable">tape</span>:
+        <span class="py-src-comment"># Compute activations of the last conv layer and make the tape watch it</span>
+        <span class="py-src-variable">last_conv_layer_output</span> = <span class="py-src-variable">last_conv_layer_model</span>(<span class="py-src-variable">img_array</span>)
+        <span class="py-src-variable">tape</span>.<span class="py-src-variable">watch</span>(<span class="py-src-variable">last_conv_layer_output</span>)
+        <span class="py-src-comment"># Compute class predictions</span>
+        <span class="py-src-variable">preds</span> = <span class="py-src-variable">classifier_model</span>(<span class="py-src-variable">last_conv_layer_output</span>)
+        <span class="py-src-variable">top_pred_index</span> = <span class="py-src-variable">tf</span>.<span class="py-src-variable">argmax</span>(<span class="py-src-variable">preds</span>[<span class="py-src-number">0</span>])
+        <span class="py-src-variable">top_class_channel</span> = <span class="py-src-variable">preds</span>[:, <span class="py-src-variable">top_pred_index</span>]
+
+    <span class="py-src-comment"># This is the gradient of the top predicted class with regard to</span>
+    <span class="py-src-comment"># the output feature map of the last conv layer</span>
+    <span class="py-src-variable">grads</span> = <span class="py-src-variable">tape</span>.<span class="py-src-variable">gradient</span>(<span class="py-src-variable">top_class_channel</span>, <span class="py-src-variable">last_conv_layer_output</span>)
+
+    <span class="py-src-comment"># This is a vector where each entry is the mean intensity of the gradient</span>
+    <span class="py-src-comment"># over a specific feature map channel</span>
+    <span class="py-src-variable">pooled_grads</span> = <span class="py-src-variable">tf</span>.<span class="py-src-variable">reduce_mean</span>(<span class="py-src-variable">grads</span>, <span class="py-src-variable">axis</span>=(<span class="py-src-number">0</span>, <span class="py-src-number">1</span>, <span class="py-src-number">2</span>))
+
+    <span class="py-src-comment"># We multiply each channel in the feature map array</span>
+    <span class="py-src-comment"># by &quot;how important this channel is&quot; with regard to the top predicted class</span>
+    <span class="py-src-variable">last_conv_layer_output</span> = <span class="py-src-variable">last_conv_layer_output</span>.<span class="py-src-variable">numpy</span>()[<span class="py-src-number">0</span>]
+    <span class="py-src-variable">pooled_grads</span> = <span class="py-src-variable">pooled_grads</span>.<span class="py-src-variable">numpy</span>()
+    <span class="py-src-variable">for</span> <span class="py-src-variable">i</span> <span class="py-src-variable">in</span> <span class="py-src-variable">range</span>(<span class="py-src-variable">pooled_grads</span>.<span class="py-src-variable">shape</span>[-<span class="py-src-number">1</span>]):
+        <span class="py-src-variable">last_conv_layer_output</span>[:, :, <span class="py-src-variable">i</span>] *= <span class="py-src-variable">pooled_grads</span>[<span class="py-src-variable">i</span>]
+
+    <span class="py-src-comment"># The channel-wise mean of the resulting feature map</span>
+    <span class="py-src-comment"># is our heatmap of class activation</span>
+    <span class="py-src-variable">heatmap</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">mean</span>(<span class="py-src-variable">last_conv_layer_output</span>, <span class="py-src-variable">axis</span>=-<span class="py-src-number">1</span>)
+
+    <span class="py-src-comment"># For visualization purpose, we will also normalize the heatmap between 0 &amp; 1</span>
+    <span class="py-src-variable">heatmap</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">maximum</span>(<span class="py-src-variable">heatmap</span>, <span class="py-src-number">0</span>) / <span class="py-src-variable">np</span>.<span class="py-src-variable">max</span>(<span class="py-src-variable">heatmap</span>)
+    <span class="py-src-variable">return</span> <span class="py-src-variable">heatmap</span>
+
+<span class="py-src-variable">def</span> <span class="py-src-identifier">diferenca</span>(<span class="py-src-parameter">path</span>):
+    <span class="py-src-comment"># read image transform and resize</span>
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">imread</span>(<span class="py-src-variable">path</span>)
+
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">cvtColor</span>(<span class="py-src-variable">image</span>, <span class="py-src-variable">COLOR_BGR2RGB</span>)
+    <span class="py-src-variable">image</span> = <span class="py-src-variable">resize</span>(<span class="py-src-variable">image</span>, (<span class="py-src-number">224</span>, <span class="py-src-number">224</span>))
+
+    <span class="py-src-comment"># add to array (input format for keras model must be array - on position in our case)</span>
+    <span class="py-src-variable">inputData</span> = []
+    <span class="py-src-variable">inputData</span>.<span class="py-src-variable">append</span>(<span class="py-src-variable">image</span>)
+    <span class="py-src-comment"># normalize values like they were used in train</span>
+    <span class="py-src-variable">data</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">array</span>(<span class="py-src-variable">inputData</span>) / <span class="py-src-number">255.0</span>  <span class="py-src-comment"># normalization</span>
+
+    <span class="py-src-comment"># Generate class activation heatmap</span>
+    <span class="py-src-variable">heatmap</span> = <span class="py-src-variable">make_gradcam_heatmap</span>(
+        <span class="py-src-variable">data</span>, <span class="py-src-variable">model</span>, <span class="py-src-variable">last_conv_layer_name</span>, <span class="py-src-variable">classifier_layer_names</span>
+    )
+
+    <span class="py-src-variable">img</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">load_img</span>(<span class="py-src-variable">path</span>)
+
+    <span class="py-src-variable">img</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">img_to_array</span>(<span class="py-src-variable">img</span>)
+
+    <span class="py-src-comment"># We rescale heatmap to a range 0-255</span>
+    <span class="py-src-variable">heatmap</span> = <span class="py-src-variable">np</span>.<span class="py-src-variable">uint8</span>(<span class="py-src-number">255</span> * <span class="py-src-variable">heatmap</span>)
+
+    <span class="py-src-comment"># We use jet colormap to colorize heatmap</span>
+    <span class="py-src-variable">jet</span> = <span class="py-src-variable">cm</span>.<span class="py-src-variable">get_cmap</span>(<span class="py-src-string">&#x27;jet&#x27;</span>)
+
+    <span class="py-src-comment"># We use RGB values of the colormap</span>
+    <span class="py-src-variable">jet_colors</span> = <span class="py-src-variable">jet</span>(<span class="py-src-variable">np</span>.<span class="py-src-variable">arange</span>(<span class="py-src-number">256</span>))[:, :<span class="py-src-number">3</span>]
+    <span class="py-src-variable">jet_heatmap</span> = <span class="py-src-variable">jet_colors</span>[<span class="py-src-variable">heatmap</span>]
+
+    <span class="py-src-comment"># We create an image with RGB colorized heatmap</span>
+    <span class="py-src-variable">jet_heatmap</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">array_to_img</span>(<span class="py-src-variable">jet_heatmap</span>)
+    <span class="py-src-variable">jet_heatmap</span> = <span class="py-src-variable">jet_heatmap</span>.<span class="py-src-variable">resize</span>((<span class="py-src-variable">img</span>.<span class="py-src-variable">shape</span>[<span class="py-src-number">1</span>], <span class="py-src-variable">img</span>.<span class="py-src-variable">shape</span>[<span class="py-src-number">0</span>]))
+    <span class="py-src-variable">jet_heatmap</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">img_to_array</span>(<span class="py-src-variable">jet_heatmap</span>)
+
+    <span class="py-src-comment"># Superimpose the heatmap on original image</span>
+    <span class="py-src-variable">superimposed_img</span> = <span class="py-src-variable">jet_heatmap</span> * <span class="py-src-number">0.4</span> + <span class="py-src-variable">img</span>
+    <span class="py-src-variable">superimposed_img</span> = <span class="py-src-variable">keras</span>.<span class="py-src-variable">preprocessing</span>.<span class="py-src-variable">image</span>.<span class="py-src-variable">array_to_img</span>(<span class="py-src-variable">superimposed_img</span>)
+
+    <span class="py-src-comment"># Display Grad CAM</span>
+    <span class="py-src-variable">Image</span>(<span class="py-src-variable">superimposed_img</span>)
+
+    <span class="py-src-variable">nano</span> = <span class="py-src-variable">time</span>.<span class="py-src-variable">time_ns</span>()
+    <span class="py-src-variable">pathWithOutStatic</span> = <span class="py-src-string">&quot;{:f}.jpg&quot;</span>.<span class="py-src-variable">format</span>(<span class="py-src-variable">nano</span>)
+    <span class="py-src-variable">pathImg1</span> = <span class="py-src-string">&quot;static/{:s}&quot;</span>.<span class="py-src-variable">format</span>(<span class="py-src-variable">pathWithOutStatic</span>)
+    <span class="py-src-variable">superimposed_img</span> = <span class="py-src-variable">superimposed_img</span>.<span class="py-src-variable">resize</span>((<span class="py-src-number">2160</span>,<span class="py-src-number">1920</span>))
+    <span class="py-src-variable">superimposed_img</span>.<span class="py-src-variable">save</span>(<span class="py-src-variable">pathImg1</span>, <span class="py-src-string">&quot;JPEG&quot;</span>)
+    <span class="py-src-variable">return</span> <span class="py-src-variable">pathWithOutStatic</span>
+
+@<span class="py-src-variable">app</span>.<span class="py-src-variable">route</span>(<span class="py-src-string">&#x27;/&#x27;</span>)
+<span class="py-src-variable">def</span> <span class="py-src-identifier">home</span>():
+    <span class="py-src-variable">return</span> <span class="py-src-variable">render_template</span>(<span class="py-src-string">&quot;home.html&quot;</span>)
+
+@<span class="py-src-variable">app</span>.<span class="py-src-variable">route</span>(<span class="py-src-string">&#x27;/app&#x27;</span>)
+<span class="py-src-variable">def</span> <span class="py-src-identifier">aplication</span>():
+    <span class="py-src-variable">return</span> <span class="py-src-variable">render_template</span>(<span class="py-src-string">&quot;app.html&quot;</span>)
+
+@<span class="py-src-variable">app</span>.<span class="py-src-variable">route</span>(<span class="py-src-string">&#x27;/disagree&#x27;</span>, <span class="py-src-variable">methods</span>=[<span class="py-src-string">&#x27;POST&#x27;</span>])
+<span class="py-src-variable">def</span> <span class="py-src-identifier">disagree</span>():
+    <span class="py-src-variable">req</span> = <span class="py-src-variable">request</span>.<span class="py-src-variable">get_json</span>()
+    <span class="py-src-variable">if</span> (<span class="py-src-variable">req</span>.<span class="py-src-variable">get</span>(<span class="py-src-string">&quot;classification&quot;</span>) == <span class="py-src-string">&quot;&quot;</span>):
+        <span class="py-src-variable">return</span> <span class="py-src-variable">jsonify</span>({<span class="py-src-string">&quot;data&quot;</span>: <span class="py-src-string">&quot;Error&quot;</span>})
+
+    <span class="py-src-variable">values</span> = <span class="py-src-variable">req</span>.<span class="py-src-variable">get</span>(<span class="py-src-string">&quot;value&quot;</span>)
+    <span class="py-src-variable">if</span> <span class="py-src-variable">values</span>[<span class="py-src-number">0</span>]&gt;<span class="py-src-variable">values</span>[<span class="py-src-number">1</span>] <span class="py-src-variable">and</span> <span class="py-src-variable">values</span>[<span class="py-src-number">0</span>]&gt;<span class="py-src-variable">values</span>[<span class="py-src-number">2</span>]:
+        <span class="py-src-variable">ourAnalysis</span> = <span class="py-src-string">&quot;normal&quot;</span>
+    <span class="py-src-variable">if</span> <span class="py-src-variable">values</span>[<span class="py-src-number">1</span>]&gt;<span class="py-src-variable">values</span>[<span class="py-src-number">0</span>] <span class="py-src-variable">and</span> <span class="py-src-variable">values</span>[<span class="py-src-number">1</span>]&gt;<span class="py-src-variable">values</span>[<span class="py-src-number">2</span>]:
+        <span class="py-src-variable">ourAnalysis</span> = <span class="py-src-string">&quot;covid&quot;</span>
+    <span class="py-src-variable">if</span> <span class="py-src-variable">values</span>[<span class="py-src-number">2</span>] &gt; <span class="py-src-variable">values</span>[<span class="py-src-number">0</span>] <span class="py-src-variable">and</span> <span class="py-src-variable">values</span>[<span class="py-src-number">2</span>] &gt; <span class="py-src-variable">values</span>[<span class="py-src-number">1</span>]:
+        <span class="py-src-variable">ourAnalysis</span> = <span class="py-src-string">&quot;other virus&quot;</span>
+
+    <span class="py-src-variable">oldPath</span> = <span class="py-src-variable">req</span>.<span class="py-src-variable">get</span>(<span class="py-src-string">&quot;path&quot;</span>)
+    <span class="py-src-variable">oldPath2</span> = <span class="py-src-variable">oldPath</span>.<span class="py-src-variable">split</span>(<span class="py-src-string">&quot;/&quot;</span>)
+    <span class="py-src-variable">x</span> = <span class="py-src-variable">len</span>(<span class="py-src-variable">oldPath2</span>)
+    <span class="py-src-variable">maniplulatedPath</span> = <span class="py-src-variable">oldPath2</span>[<span class="py-src-variable">x</span>-<span class="py-src-number">2</span>]+<span class="py-src-string">&quot;/&quot;</span>+<span class="py-src-variable">oldPath2</span>[<span class="py-src-variable">x</span>-<span class="py-src-number">1</span>]
+
+    <span class="py-src-variable">copyfile</span>(<span class="py-src-variable">maniplulatedPath</span>, <span class="py-src-variable">maniplulatedPath</span>.<span class="py-src-variable">replace</span>(<span class="py-src-string">&quot;static&quot;</span>, <span class="py-src-string">&quot;disagree&quot;</span>))
+
+    <span class="py-src-variable">if</span> <span class="py-src-variable">not</span> <span class="py-src-variable">os</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">exists</span>(<span class="py-src-string">&quot;disagree/data.csv&quot;</span>):
+        <span class="py-src-variable">with</span> <span class="py-src-variable">open</span>(<span class="py-src-string">&#x27;disagree/data.csv&#x27;</span>, <span class="py-src-string">&#x27;w&#x27;</span>, <span class="py-src-variable">newline</span>=<span class="py-src-string">&#x27;&#x27;</span>) <span class="py-src-variable">as</span> <span class="py-src-variable">file</span>:
+            <span class="py-src-variable">writer</span> = <span class="py-src-variable">csv</span>.<span class="py-src-variable">writer</span>(<span class="py-src-variable">file</span>, <span class="py-src-variable">delimiter</span>=<span class="py-src-string">&quot;|&quot;</span>)
+            <span class="py-src-variable">writer</span>.<span class="py-src-variable">writerow</span>([<span class="py-src-string">&quot;Our Classification&quot;</span>, <span class="py-src-string">&quot;Values&quot;</span>, <span class="py-src-string">&quot;Img Path&quot;</span>, <span class="py-src-string">&quot;user classification&quot;</span>])
+
+
+    <span class="py-src-variable">with</span> <span class="py-src-variable">open</span>(<span class="py-src-string">&#x27;disagree/data.csv&#x27;</span>, <span class="py-src-string">&#x27;a&#x27;</span>, <span class="py-src-variable">newline</span>=<span class="py-src-string">&#x27;&#x27;</span>) <span class="py-src-variable">as</span> <span class="py-src-variable">file</span>:
+        <span class="py-src-variable">writer</span> = <span class="py-src-variable">csv</span>.<span class="py-src-variable">writer</span>(<span class="py-src-variable">file</span>, <span class="py-src-variable">delimiter</span>=<span class="py-src-string">&quot;|&quot;</span>)
+        <span class="py-src-variable">writer</span>.<span class="py-src-variable">writerow</span>([<span class="py-src-variable">ourAnalysis</span>, <span class="py-src-variable">req</span>.<span class="py-src-variable">get</span>(<span class="py-src-string">&quot;value&quot;</span>), <span class="py-src-variable">maniplulatedPath</span>.<span class="py-src-variable">replace</span>(<span class="py-src-string">&quot;static/&quot;</span>, <span class="py-src-string">&quot;&quot;</span>), <span class="py-src-variable">req</span>.<span class="py-src-variable">get</span>(<span class="py-src-string">&quot;classification&quot;</span>)])
+
+
+    <span class="py-src-variable">return</span> <span class="py-src-variable">jsonify</span>({<span class="py-src-string">&quot;data&quot;</span>: <span class="py-src-string">&quot;Success&quot;</span>})
+
+@<span class="py-src-variable">app</span>.<span class="py-src-variable">route</span>(<span class="py-src-string">&#x27;/upload&#x27;</span>, <span class="py-src-variable">methods</span>=[<span class="py-src-string">&#x27;POST&#x27;</span>])
+<span class="py-src-variable">def</span> <span class="py-src-identifier">upload</span>():
+    <span class="py-src-variable">target</span> = <span class="py-src-variable">os</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">join</span>(<span class="py-src-variable">APP_ROOT</span>, <span class="py-src-string">&quot;static/&quot;</span>)
+
+    <span class="py-src-variable">if</span> <span class="py-src-variable">not</span> <span class="py-src-variable">os</span>.<span class="py-src-variable">path</span>.<span class="py-src-variable">isdir</span>(<span class="py-src-variable">target</span>):
+        <span class="py-src-variable">os</span>.<span class="py-src-variable">mkdir</span>(<span class="py-src-variable">target</span>)
+
+    <span class="py-src-variable">nano</span> = <span class="py-src-variable">time</span>.<span class="py-src-variable">time_ns</span>()
+    <span class="py-src-variable">pathWithOutStatic</span> = <span class="py-src-string">&quot;{:f}.jpg&quot;</span>.<span class="py-src-variable">format</span>(<span class="py-src-variable">nano</span>)
+    <span class="py-src-variable">pathImg</span> = <span class="py-src-string">&quot;static/{:s}&quot;</span>.<span class="py-src-variable">format</span>(<span class="py-src-variable">pathWithOutStatic</span>)
+
+    <span class="py-src-variable">for</span> <span class="py-src-variable">file</span> <span class="py-src-variable">in</span> <span class="py-src-variable">request</span>.<span class="py-src-variable">files</span>.<span class="py-src-variable">getlist</span>(<span class="py-src-string">&quot;image&quot;</span>):
+        <span class="py-src-variable">filename</span> = <span class="py-src-variable">file</span>.<span class="py-src-variable">filename</span>
+        <span class="py-src-variable">file</span>.<span class="py-src-variable">save</span>(<span class="py-src-variable">pathImg</span>)
+
+
+    <span class="py-src-variable">img</span> = <span class="py-src-variable">pillow</span>.<span class="py-src-variable">open</span>(<span class="py-src-variable">pathImg</span>).<span class="py-src-variable">convert</span>(<span class="py-src-string">&quot;RGB&quot;</span>)
+    <span class="py-src-variable">img</span> = <span class="py-src-variable">img</span>.<span class="py-src-variable">resize</span>((<span class="py-src-number">2160</span>,<span class="py-src-number">1920</span>))
+    <span class="py-src-variable">img</span>.<span class="py-src-variable">save</span>(<span class="py-src-variable">pathImg</span>)
+
+    <span class="py-src-comment">#Receber valores do prediction</span>
+    <span class="py-src-variable">values</span> = <span class="py-src-variable">dataPrediction</span>(<span class="py-src-variable">pathImg</span>)
+    <span class="py-src-variable">valuesPercentage</span> = []
+
+    <span class="py-src-variable">for</span> <span class="py-src-variable">i</span> <span class="py-src-variable">in</span> <span class="py-src-variable">values</span>[<span class="py-src-number">0</span>]:
+        <span class="py-src-variable">valuesPercentage</span>.<span class="py-src-variable">append</span>(<span class="py-src-variable">i</span>*<span class="py-src-number">100.00</span>)
+
+
+    <span class="py-src-variable">imgDiffPath</span> = <span class="py-src-variable">diferenca</span>(<span class="py-src-variable">pathImg</span>)
+
+    <span class="py-src-variable">labels</span> = [<span class="py-src-string">&quot;Normal&quot;</span>, <span class="py-src-string">&quot;Covid&quot;</span>, <span class="py-src-string">&quot;Other Vírus&quot;</span>]
+
+    <span class="py-src-variable">return</span> <span class="py-src-variable">render_template</span>(<span class="py-src-string">&quot;upload.html&quot;</span>, <span class="py-src-variable">send</span> = <span class="py-src-variable">pathWithOutStatic</span>, <span class="py-src-variable">received</span> = <span class="py-src-variable">imgDiffPath</span>, <span class="py-src-variable">values</span> = <span class="py-src-variable">valuesPercentage</span>, <span class="py-src-variable">labels</span>= <span class="py-src-variable">labels</span>)
+
+<span class="py-src-variable">if</span> <span class="py-src-variable">__name__</span> == <span class="py-src-string">&quot;__main__&quot;</span>:
+    <span class="py-src-variable">ip</span> = <span class="py-src-variable">get_Host_name_IP</span>()
+    <span class="py-src-variable">app</span>.<span class="py-src-variable">run</span>(<span class="py-src-variable">debug</span>=<span class="py-src-variable">False</span>,<span class="py-src-variable">host</span>=<span class="py-src-variable">ip</span>, <span class="py-src-variable">port</span>=<span class="py-src-number">80</span>)
+</pre>
+</body>
