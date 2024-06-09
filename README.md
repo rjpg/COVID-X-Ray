@@ -11,3 +11,6 @@ COVID-X-Ray
 
 
 ![Captura de ecrã de 2024-06-09 13-28-22](https://github.com/rjpg/COVID-X-Ray/assets/22857941/4f7c4a90-67eb-4684-8a8f-504e131c4040)
+
+
+![Captura de ecrã de 2024-06-09 13-34-38](https://github.com/rjpg/COVID-X-Ray/assets/22857941/4563dd94-6e22-47d1-8386-c81846da5f48)
